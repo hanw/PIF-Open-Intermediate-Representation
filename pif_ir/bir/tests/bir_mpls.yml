@@ -1,0 +1,139 @@
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Structs
+# ----- ----- ----- ----- ----- ----- ----- -----
+ethernet_t:
+    type: struct
+    fields:
+        - dst:      48
+        - src:      48
+        - type_:    16
+
+mpls_t:
+    type: struct
+    fields:
+        - label:    20
+        - tc:       3
+        - s:        1
+        - ttl:      8
+ipv4_t:
+    type: struct
+    fields:
+        - version:  4
+        - ihl:      4
+        - tos:      8
+        - len:      16
+        - id:       16
+        - flags:    3
+        - frag:     13
+        - ttl:      8
+        - proto:    8
+        - chksum:   16
+        - src:      32
+        - dst:      32
+
+
+mpls_value_set_req_t:
+    type: struct
+    fields:
+        - label:        20
+
+mpls_value_set_resp_t:
+    type: struct
+    fields:
+        - hit:          1
+        - flags:        3
+        - frag:         13
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Metadata Instances
+# ----- ----- ----- ----- ----- ----- ----- -----
+mpls_value_set_req:
+    type:       metadata
+    values:     mpls_value_set_req_t
+    visibility: none
+
+mpls_value_set_resp:
+    type:       metadata
+    values:     mpls_value_set_resp_t
+    visibility: none
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Tables
+# ----- ----- ----- ----- ----- ----- ----- -----
+mpls_value_set:
+    type:       table
+    match_type: exact
+    depth:      64
+    request:    mpls_value_set_req_t
+    response:   mpls_value_set_resp_t
+    operations: []
+
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Parser
+# ----- ----- ----- ----- ----- ----- ----- -----
+bb_eth:
+    type:           basic_block
+    local_header:   ethernet_t
+    instructions:   []
+    next_control_state:
+        - $offset$ + 112
+        - [type_ == 0x8847, bb_mpls]
+        - $done$
+
+bb_mpls:
+    type:           basic_block
+    local_header:   mpls_t
+    local_table:    mpls_value_set
+    instructions:
+        - [V, mpls_value_set_req.label, label]
+        - [S, mpls_value_set_resp, mpls_value_set_req]
+    next_control_state:
+        - $offset$ + 32
+        - [mpls_value_set_resp.hit == 1, bb_ipv4]
+        - $done$
+
+bb_ipv4:
+    type:           basic_block
+    local_header:   ipv4_t
+    instructions:
+        - [V, flags, mpls_value_set_resp.flags]
+        - [V, frag, mpls_value_set_resp.frag]
+    next_control_state:
+        - $offset$ + 160
+        - $done$
+
+parser:
+    type: control_flow
+    start_control_state: 
+        - 0
+        - bb_eth
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# System
+# ----- ----- ----- ----- ----- ----- ----- -----
+a_p4_switch:
+    type:       processor_layout
+    format:     list
+    implementation:
+        - parser
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Table Initialization
+# ----- ----- ----- ----- ----- ----- ----- -----
+table_initialization:
+    - mpls_value_set:
+        key:
+            label:  0xCCCCC
+        value:
+            hit:    1
+            flags:  0xF
+            frag:   0xFFFF
+    - mpls_value_set:
+        key:
+            label:  0xDDDDD
+        value:
+            hit:    1
+            flags:  0xF
+            frag:   0xFFFF
+

@@ -54,7 +54,7 @@ config_defaults = {
     "interfaces" : "veth0,veth2,veth4,veth6"
 }
 
-parser = argparse.ArgumentParser(description='Instantiate an AIR switch',
+parser = argparse.ArgumentParser(description='Instantiate an BIR switch',
         usage="%(prog)s source [source ...] [options]")
 parser.set_defaults(**config_defaults)
 parser.add_argument('sources', metavar='sources', type=str, nargs='+',
@@ -69,7 +69,7 @@ parser.add_argument('--dp_verbose', action='store_true',
                     help="Set dataplane verbose high")
 
 # @todo: Add platform + full VPI support for dataplane port specs
-# @todo: Allow specifying the AIR metalanguage file as (special) input
+# @todo: Allow specifying the BIR metalanguage file as (special) input
 
 args = parser.parse_args()
 
@@ -81,7 +81,7 @@ if args.verbose:
 else:
     logging.basicConfig(level=logging.INFO)
 
-logging.info("Creating IRI switch instance")
+logging.info("Creating BIR switch instance")
 
 if args.run_for > 0:
     logging.info("Running for %d seconds", args.run_for)

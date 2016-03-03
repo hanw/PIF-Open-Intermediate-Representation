@@ -68,13 +68,13 @@ From the root directory (i.e. where `setup.py` is located) run:
 
     $ sudo pip install ./
 
-Run Unit Tests
---------------
+Run BIR Unit Tests
+------------------
     $ cd pif_ir/bir/tests/
     $ make test
 
-Run the BIR switch
-------------------
+Run an example BIR-described switch
+-----------------------------------
 
     $ sudo scripts/veth_setup.sh
     $ cd pif_ir/examples/bir/

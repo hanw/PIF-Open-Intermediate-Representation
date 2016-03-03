@@ -33,7 +33,7 @@ class Switch(Thread):
         """
         Thread.__init__(self)
 
-        logging.info("Starting AIR Switch instance %s" % name)
+        logging.info("Starting PIF IR Switch instance %s" % name)
         self.name = name
         self.input = input
         self.dataplane = dataplane

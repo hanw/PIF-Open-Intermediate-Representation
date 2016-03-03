@@ -65,6 +65,7 @@ Install
 ----------
 
 From the root directory (i.e. where `setup.py` is located) run:
+
     $ sudo pip install ./
 
 Run Unit Tests

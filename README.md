@@ -17,7 +17,11 @@ Documentation
 =============
 
 The docs directory contains documents and presentations related
-to the overall work of the project.
+to the software and specifications of the project.
+
+The meetings directory contains documents and presentations
+related to the discussions and decisions of the PIF project group.
+
 
 
 Software

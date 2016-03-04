@@ -1,0 +1,16 @@
+PIF Records
+===========
+
+The PIF group was formed as an Open Networking Foundation (ONF) working
+group, and initially met under the ONF antitrust and intellectual policies.
+The first meeting was on 16 September 2014, and the final meeting under
+ONF policies was on 28 April 2015.  The agendas and any notes from these
+meetings are not included here, but are archived in an ONF repository.
+With the agreement of their originators, various presentations from these
+meetings are made available here as an information source.
+
+The group has been an Open Software SDN (OSSDN) project since then, and
+meets under the OSSDN meeting guidelines.  The first such meeting was
+on 19 May 2015.  The agendas and presentations from these meetings are
+included here.
+

@@ -1,7 +1,7 @@
 import logging 
 from collections import OrderedDict
 
-from pif_ir.bir.objects.bir_validate import check_attributes
+from pif_ir.bir.utils.validate import check_attributes
 
 class BIRStruct(object):
     required_attributes = ['fields']

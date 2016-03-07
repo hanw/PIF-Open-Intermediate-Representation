@@ -2,7 +2,7 @@
 import logging
 import struct
 
-from pif_ir.bir.objects.ncs_parser import NCSParser
+from pif_ir.bir.utils.ncs_parser import NCSParser
 
 logging.basicConfig(level=logging.DEBUG)
 logging.info("RUNNING TEST: %s" % __file__)

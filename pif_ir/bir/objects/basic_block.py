@@ -1,8 +1,8 @@
 import logging
 
-from pif_ir.bir.objects.bir_exception import BIRControlStateError
-from pif_ir.bir.objects.bir_exception import BIRRefError
-from pif_ir.bir.objects.bir_validate import check_attributes
+from pif_ir.bir.utils.exceptions import BIRControlStateError
+from pif_ir.bir.utils.exceptions import BIRRefError
+from pif_ir.bir.utils.validate import check_attributes
 
 class BasicBlock(object):
     """

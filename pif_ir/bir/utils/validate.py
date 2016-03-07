@@ -1,4 +1,4 @@
-from pif_ir.bir.objects.bir_exception import *
+from pif_ir.bir.utils.exceptions import *
 
 def check_attributes(obj_name, attributes, required_attributes):
     for attr in required_attributes:

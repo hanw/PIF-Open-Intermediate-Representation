@@ -7,7 +7,7 @@ import array
 import sys
 
 from pif_ir.meta_ir.common import *
-from air_exception import *
+from pif_ir.air.utils.air_exception import *
 
 def field_width_get(field_name, attrs, field_values, remaining_bits=None):
     """

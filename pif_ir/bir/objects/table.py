@@ -1,9 +1,9 @@
 import logging
 from collections import OrderedDict
 
-from pif_ir.bir.objects.bir_exception import *
-from pif_ir.bir.objects.bir_validate import check_attributes
 from pif_ir.bir.objects.metadata_instance import MetadataInstance
+from pif_ir.bir.utils.exceptions import *
+from pif_ir.bir.utils.validate import check_attributes
 
 class Table(object):
     required_attributes = ['match_type', 'depth', 'request', 'response',

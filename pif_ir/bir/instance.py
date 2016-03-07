@@ -17,13 +17,14 @@ from pif_ir.bir.objects import table_entry
 from pif_ir.bir.objects.basic_block import BasicBlock
 from pif_ir.bir.objects.bir_struct import BIRStruct
 from pif_ir.bir.objects.control_flow import ControlFlow
-from pif_ir.bir.objects.instruction_parser import InstructionParser
 from pif_ir.bir.objects.metadata_instance import MetadataInstance
-from pif_ir.bir.objects.ncs_parser import NCSParser
 #from pif_ir.bir.objects.other_processor import OtherProcessor
 from pif_ir.bir.objects.packet_instance import PacketInstance
 from pif_ir.bir.objects.processor import Processor
 from pif_ir.bir.objects.table import Table
+
+from pif_ir.bir.utils.instruction_parser import InstructionParser
+from pif_ir.bir.utils.ncs_parser import NCSParser
 
 def hexify(buf, bpl=16):
     """

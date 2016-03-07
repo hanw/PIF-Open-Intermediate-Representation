@@ -1,8 +1,8 @@
 import logging
 from collections import OrderedDict
 
-from pif_ir.bir.objects.bir_validate import check_attributes
 from pif_ir.bir.objects.value_instance import ValueInstance
+from pif_ir.bir.utils.validate import check_attributes
 
 class MetadataInstance(object):
     required_attributes = ['values', 'visibility']

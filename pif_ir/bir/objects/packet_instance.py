@@ -1,8 +1,8 @@
 import logging
 
-from pif_ir.bir.objects import bir_common
-from pif_ir.bir.objects.bir_exception import *
 from pif_ir.bir.objects.metadata_instance import MetadataInstance
+from pif_ir.bir.utils.common import int_to_bytearray, bytearray_to_int
+from pif_ir.bir.utils.exceptions import *
 
 class PacketInstance(object):
     id_next = 0
@@ -24,14 +24,43 @@ class PacketInstance(object):
         logging.debug("Created packet %d", self.idx)
 
     def get_bits(self, bit_width, bit_offset=0):
-        return bir_common._to_int(self.packet_data, bit_width, bit_offset)
+        return bytearray_to_int(self.packet_data, bit_width, bit_offset)
 
     def set_bits(self, value, bit_width, bit_offset=0):
         byte_offset = bit_offset / 8 
         offset = bit_offset % 8
 
-        vals, masks = bir_common._to_bytearray(offset, value, bit_width)
+        vals, masks = int_to_bytearray(offset, value, bit_width)
         for idx, (val, mask) in enumerate(zip(vals,masks)):
             self.packet_data[byte_offset + idx] &= mask
             self.packet_data[byte_offset + idx] += val
+
+    def insert(self, length, bit_offset=0):
+        byte_offset = bit_offset / 8
+        offset = bit_offset % 8
+
+        # FIXME: enforced for simplicity
+        if offset != 0:
+            raise BIRError("packet insert offset should be byte address") 
+        if length %8 != 0:
+            raise BIRError("packet insert length should be a factor of 8")
+
+        tmp = self.packet_data[:byte_offset]
+        tmp += bytearray(length/8)
+        tmp += self.packet_data[byte_offset:]
+        self.packet_data = tmp
+
+    def remove(self, length, bit_offset=0):
+        byte_offset = bit_offset / 8
+        offset = bit_offset % 8
+
+        # FIXME: enforced for simplicity
+        if offset != 0:
+            raise BIRError("packet remove offset should be byte address") 
+        if length %8 != 0:
+            raise BIRError("packet remove length should be a factor of 8")
+
+        tmp = self.packet_data[:byte_offset]
+        tmp += self.packet_data[byte_offset + (length/8):]
+        self.packet_data = tmp
 

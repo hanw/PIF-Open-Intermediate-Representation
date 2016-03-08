@@ -18,8 +18,8 @@ import table
 
 from pif_ir.meta_ir.common import *
 
-from processor import Processor
-from air_exception import *
+from pif_ir.air.objects.processor import Processor
+from pif_ir.air.utils.air_exception import *
 
 class Pipeline(Processor):
     """

@@ -11,6 +11,9 @@ sample: submodule
 mpls: submodule
 	sudo ${PYPATH} ./start.py bir_mpls.yml
 
+%.yml: submodule
+	sudo ${PYPATH} ./start.py $@
+
 submodule:
 	git submodule update --init
 

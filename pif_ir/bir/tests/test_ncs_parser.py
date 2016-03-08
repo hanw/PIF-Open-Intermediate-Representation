@@ -33,4 +33,10 @@ if NCS.evaluate("0x0800 == 0x800", None, pkt) != True:
     logging.error("Test Case 1: failed")
     exit(1)
 
+if NCS.evaluate("0 == 0x0", None, pkt) != True:
+    logging.error("Test Case 2: failed")
+    exit(1)
 
+if NCS.evaluate("1 == 0x1", None, pkt) != True:
+    logging.error("Test Case 3: failed")
+    exit(1)

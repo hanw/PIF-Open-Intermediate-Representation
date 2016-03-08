@@ -12,7 +12,7 @@ class NCSParser(object):
         self.header = header
         self.packet = packet
         self.bit_offset = bit_offset
-        return self.parser.parse(statement, lexer=self.lexer)
+        return self.parser.parse(str(statement), lexer=self.lexer)
 
     # Lexer Tokens
     # ----- ----- ----- ----- ----- ----- ----- ----- -----
@@ -35,10 +35,10 @@ class NCSParser(object):
     t_OR        = r'\|'
     t_ignore    = ' \t\n'
 
-    identifier = r'[a-zA-Z$][0-9a-zA-Z_$]*'
-    dec_const = '[1-9][0-9]*'
-    hex_const = '0[xX][0-9a-fA-F]+'
-    true_const = r'true'
+    identifier  = r'[a-zA-Z$][0-9a-zA-Z_$]*'
+    hex_const   = r'0[xX][0-9a-fA-F]+'
+    dec_const   = r'0|([1-9][0-9]*)'
+    true_const  = r'true'
     false_const = r'false'
     
     @TOKEN(identifier) 
@@ -46,14 +46,14 @@ class NCSParser(object):
         t.type = 'ID'
         return t
 
-    @TOKEN(dec_const)
-    def t_INT_CONST_DEC(self, t):
-        t.value = int(t.value)
-        return t
-    
     @TOKEN(hex_const)
     def t_INT_CONST_HEX(self, t):
         t.value = int(t.value, 16)
+        return t
+
+    @TOKEN(dec_const)
+    def t_INT_CONST_DEC(self, t):
+        t.value = int(t.value)
         return t
 
     def t_error(self, t):

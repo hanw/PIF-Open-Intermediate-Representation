@@ -41,7 +41,7 @@ class MetadataInstance(object):
             fld_offset += len(fld)
 
     def serialize(self):
-        byte_list = bytearray(len(self))
+        byte_list = bytearray(len(self)/8)
         bit_offset = 0;
         for fld in self.values.values():
             fld.update(byte_list, bit_offset)

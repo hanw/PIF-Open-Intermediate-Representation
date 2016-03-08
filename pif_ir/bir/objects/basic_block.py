@@ -2,7 +2,9 @@ import logging
 
 from pif_ir.bir.utils.exceptions import BIRControlStateError
 from pif_ir.bir.utils.exceptions import BIRRefError
+from pif_ir.bir.utils.exceptions import BIRInstructionListError
 from pif_ir.bir.utils.validate import check_attributes
+from pif_ir.bir.utils.validate import check_basic_block_instructions
 
 class BasicBlock(object):
     """
@@ -16,7 +18,7 @@ class BasicBlock(object):
     required_attributes = ['instructions', 'next_control_state']
 
     def __init__(self, name, bb_attrs, bir_headers, bir_tables, 
-                 ncs_parser, inst_parser):
+                 bir_other_modules, ncs_parser, inst_parser):
         check_attributes(name, bb_attrs, BasicBlock.required_attributes)
         logging.debug("Adding basic_block {0}".format(name))
 
@@ -31,6 +33,7 @@ class BasicBlock(object):
         self.next_state = []    # based on 'next_control_state'
         self._handle_next_control_state(bb_attrs['next_control_state'])
 
+        self.other_modules = bir_other_modules
         self.inst_parser = inst_parser
         self.ncs_parser = ncs_parser
 
@@ -97,20 +100,66 @@ class BasicBlock(object):
                                  bit_offset):
                 return cond[1]
 
+    def _handle_v_call(self, instruction, packet, bit_offset):
+        result = self.inst_parser.evaluate(instruction[2], self.local_header,
+                                           packet, bit_offset)
+        self._assign(instruction[1], result, self.local_header, packet,
+                     bit_offset)
+
+    def _handle_s_call(self, instruction, packet, bit_offset):
+        resp = packet.metadata[instruction[1]]
+        req = packet.metadata[instruction[2]]
+        if self.local_table:
+            self.local_table.lookup(req, resp)
+
+    def _get_m_call_args(self, sig, packet):
+        ret = []
+        for s in sig:
+            tmp = s.split('.')
+            if len(tmp) == 1:
+                ret.append(packet.metadata[tmp[0]])
+            else:
+                ret.append(packet.metadata[tmp[0]].values[tmp[1]])
+        return ret
+
+    def _handle_m_call(self, instruction, packet, bit_offset):
+        # built in cases: hInsert, hRemove, eInsert, eRemove
+        if instruction[1] == 'hInsert':
+            length = len(self.local_header)
+            if len(instruction[2]) > 0:
+                length = instruction[2][0]
+            packet.insert(length, bit_offset)
+
+        elif instruction[1] == 'hRemove':
+            length = len(self.local_header)
+            if len(instruction[2]) > 0:
+                length = instruction[2][0]
+            packet.remove(length, bit_offset)
+
+        elif instruction[1] == 'eInsert':
+            pass    # FIXME: to be implemented
+        elif instruction[1] == 'eRemove':
+            pass    # FIXME: to be implemented
+
+        else:
+            args = self._get_m_call_args(instruction[2], packet)
+            if instruction[1] not in self.other_modules.keys():
+                raise BIRRefError(instruction[1], self.name)
+            module = self.other_modules[instruction[1]]
+            module(*args)
+
     def process(self, packet, bit_offset=0):
+        check_basic_block_instructions(self.name, self.instructions)
+
         for inst in self.instructions:
             if inst[0] == 'V':
-                result = self.inst_parser.evaluate(inst[2], self.local_header, 
-                                                   packet, bit_offset)
-                self._assign(inst[1], result, self.local_header, packet, 
-                             bit_offset)
+                self._handle_v_call(inst, packet, bit_offset)
             elif inst[0] == 'S':
-                resp = packet.metadata[inst[1]]
-                req = packet.metadata[inst[2]]
-                if self.local_table:
-                    self.local_table.lookup(req, resp)
+                self._handle_s_call(inst, packet, bit_offset)
+            elif inst[0] == 'M':
+                self._handle_m_call(inst, packet, bit_offset)
             else:
-                raise BIRRefError("{} call".format(inst[0]), self.name)
+                raise BIRInstructionListError(self.name, "unknown instruction")
 
         next_offset = self._get_next_offset(packet, bit_offset)
         if next_offset < bit_offset:

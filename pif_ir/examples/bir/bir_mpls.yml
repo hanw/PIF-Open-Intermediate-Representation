@@ -31,7 +31,6 @@ ipv4_t:
         - src:      32
         - dst:      32
 
-
 mpls_value_set_req_t:
     type: struct
     fields:

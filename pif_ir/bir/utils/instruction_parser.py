@@ -13,7 +13,7 @@ class InstructionParser(object):
         self.packet = packet
         self.bit_offset = bit_offset
 
-        return self.parser.parse(expression, lexer=self.lexer)
+        return self.parser.parse(str(expression), lexer=self.lexer)
 
     # Lexer Tokens
     # ----- ----- ----- ----- ----- ----- ----- ----- -----
@@ -32,22 +32,22 @@ class InstructionParser(object):
     t_ignore    = ' \t\n'
 
     identifier  = r'[a-zA-Z][0-9a-zA-Z_]*'
-    dec_const   = '[1-9][0-9]*'
-    hex_const   = '0[xX][0-9a-fA-F]+'
+    hex_const   = r'0[xX][0-9a-fA-F]+'
+    dec_const   = r'0|([1-9][0-9]*)'
 
     @TOKEN(identifier) 
     def t_ID(self, t):
         t.type = 'ID'
         return t
 
-    @TOKEN(dec_const)
-    def t_INT_CONST_DEC(self, t):
-        t.value = int(t.value)
-        return t
-    
     @TOKEN(hex_const)
     def t_INT_CONST_HEX(self, t):
         t.value = int(t.value, 16)
+        return t
+
+    @TOKEN(dec_const)
+    def t_INT_CONST_DEC(self, t):
+        t.value = int(t.value)
         return t
 
     def t_error(self, t):
@@ -86,11 +86,11 @@ class InstructionParser(object):
                 | exp XOR exp
                 | exp AND exp
         """
-        if   p[2] == 'PLUS':    p[0] = p[1] + p[3]
-        elif p[2] == 'MINUS':   p[0] = p[1] - p[3]
-        elif p[2] == 'OR':      p[0] = p[1] | p[3]
-        elif p[2] == 'XOR':     p[0] = p[1] ^ p[3]
-        else:                   p[0] = p[1] & p[3]
+        if   p[2] == '+':   p[0] = p[1] + p[3]
+        elif p[2] == '-':   p[0] = p[1] - p[3]
+        elif p[2] == '|':   p[0] = p[1] | p[3]
+        elif p[2] == '^':   p[0] = p[1] ^ p[3]
+        else:               p[0] = p[1] & p[3]
 
     def p_literal_0(self, p):
         """ literal : INT_CONST_DEC

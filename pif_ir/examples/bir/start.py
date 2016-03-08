@@ -16,6 +16,7 @@ import pif_ir
 
 from oftest.dataplane import DataPlane
 from pif_ir.bir.instance import BirInstance
+from pif_ir.bir.utils.exceptions import BIRError
 
 def start_dataplane(args):
     """
@@ -99,7 +100,10 @@ dataplane = start_dataplane(args)
 if not args.dp_verbose:
     dataplane.logger.setLevel(logging.INFO)
 
-ir = pif_ir.Switch(BirInstance, "ichiban", args.sources, dataplane)
+try:
+    ir = pif_ir.Switch(BirInstance, "ichiban", args.sources, dataplane)
+except BIRError as e:
+    print e.value
 
 # TODO: Enter a monitor
 count = 0

@@ -5,8 +5,8 @@ BIR exception definitions
 class BIRError(Exception):
     """ a base class for all bir exceptions
     """
-    def __init__(self):
-        self.value = "BIR Error!"
+    def __init__(self, msg="BIR Error!"):
+        self.value = msg
 
 class BIRYamlAttrError(BIRError):
     """ YAML file is missing a required attribute
@@ -51,3 +51,10 @@ class BIRControlStateError(BIRError):
         super(BIRControlStateError, self).__init__()
         self.value = "bad control_state in object({})".format(obj_name)
 
+class BIRInstructionListError(BIRError):
+    """ a basic block instruction list is not correctly formatted
+    """
+    def __init__(self, obj_name, msg):
+        super(BIRInstructionListError, self).__init__()
+        self.value = "bad instruction list in object({}): {}".format(obj_name,
+                                                                     msg)

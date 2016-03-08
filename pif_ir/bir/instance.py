@@ -10,10 +10,10 @@ import os
 import yaml
 import logging
 
+from importlib import import_module
+
 from pif_ir.meta_ir.instance import MetaIRInstance
-
 from pif_ir.bir.objects import table_entry
-
 from pif_ir.bir.objects.basic_block import BasicBlock
 from pif_ir.bir.objects.bir_struct import BIRStruct
 from pif_ir.bir.objects.control_flow import ControlFlow
@@ -22,7 +22,7 @@ from pif_ir.bir.objects.metadata_instance import MetadataInstance
 from pif_ir.bir.objects.packet_instance import PacketInstance
 from pif_ir.bir.objects.processor import Processor
 from pif_ir.bir.objects.table import Table
-
+from pif_ir.bir.utils.exceptions import BIRError
 from pif_ir.bir.utils.instruction_parser import InstructionParser
 from pif_ir.bir.utils.ncs_parser import NCSParser
 
@@ -66,17 +66,25 @@ class BirInstance(MetaIRInstance):
         # BIR objects
         self.bir_structs = {}
         self.bir_tables = {}
+        self.bir_other_modules = {}
         self.bir_basic_blocks = {}
         self.bir_control_flows = {}
+        self.processors = []
+        self.table_init = []
 
         for name, val in self.struct.items():
             self.bir_structs[name] = BIRStruct(name, val)
         for name, val in self.table.items():
             self.bir_tables[name] = Table(name, val)
+        for name, val in self.other_module.items():
+            for op in val['operations']:
+                module = "{}.{}".format(name, op)
+                self.bir_other_modules[module] = self._load_module(name, op)
         for name, val in self.basic_block.items():
             self.bir_basic_blocks[name] = BasicBlock(name, val, 
                                                      self.bir_structs, 
                                                      self.bir_tables, 
+                                                     self.bir_other_modules,
                                                      ncs_parser, 
                                                      inst_parser)
         for name, val in self.control_flow.items():
@@ -95,6 +103,11 @@ class BirInstance(MetaIRInstance):
         ext_objs = self.external_object_map
         if 'table_initialization' in ext_objs.keys():
             self.table_init = ext_objs['table_initialization']
+
+    def _load_module(self, name, operation):
+        module_name = "pif_ir.bir.objects.other_module.{}".format(name)
+        other_module = import_module(module_name)
+        return getattr(other_module, operation)
 
     def process_table_init(self):
         for init_entry in self.table_init:
@@ -142,14 +155,17 @@ class BirInstance(MetaIRInstance):
             logging.debug("Switch is disabled; discarding packet")
         else:
             buf = bytearray(packet_data)
-            packet = PacketInstance(buf, 
-                                    self.metadata, 
-                                    self.bir_structs)
-            logging.info("Packet {} start: {}".format(packet.idx, 
-                                                      hexify(buf)))
+            packet = PacketInstance(buf, self.metadata, self.bir_structs)
+            logging.info("Packet {} start: {}".format(packet.idx, hexify(buf)))
 
             for control_flow in self.processors:
-                self.bir_control_flows[control_flow].process(packet)
+                try:
+                    self.bir_control_flows[control_flow].process(packet)
+                except BIRError as e:
+                    print e.value
+                    exit(1)
+
+            buf = packet.packet_data
             logging.info("Packet {} result: {}".format(packet.idx, 
                                                        hexify(buf)))
             logging.info("----- ----- ----- ----- ----- ----- ----- -----")

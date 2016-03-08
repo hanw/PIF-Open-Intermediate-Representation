@@ -13,6 +13,7 @@ setup(
         'pif_ir/air/objects',
         'pif_ir/bir',
         'pif_ir/bir/objects',
+        'pif_ir/bir/objects/other_module',
         'pif_ir/bir/utils'
     ],
     package_data= {

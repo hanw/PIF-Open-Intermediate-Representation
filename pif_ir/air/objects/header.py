@@ -6,8 +6,8 @@ import logging
 import sys
 
 from pif_ir.meta_ir.common import *
-from air_exception import *
-from field import field_instance, field_width_get
+from pif_ir.air.objects.field import field_instance, field_width_get
+from pif_ir.air.utils.air_exception import *
 
 class HeaderInstance(object):
     """

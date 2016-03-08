@@ -11,9 +11,9 @@ import logging
 import pydot
 
 from pif_ir.meta_ir.common import *
-from air_exception import *
-from parsed_packet import ParsedPacket
-from processor import Processor
+from pif_ir.air.objects.parsed_packet import ParsedPacket
+from pif_ir.air.objects.processor import Processor
+from pif_ir.air.utils.air_exception import *
 
 class ParserStateTransition(object):
     """

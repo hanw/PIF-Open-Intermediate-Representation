@@ -1,4 +1,4 @@
-def _to_int(buf, bit_width, bit_offset=0):
+def bytearray_to_int(buf, bit_width, bit_offset=0):
     BYTE_MASK = [0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff]
     base = bit_offset / 8
     last = (bit_offset + bit_width + 7) / 8
@@ -20,7 +20,7 @@ def _to_int(buf, bit_width, bit_offset=0):
         remain -= take
     return value
 
-def _to_bytearray(bit_offset, value, bit_width):
+def int_to_bytearray(bit_offset, value, bit_width):
     BYTE_MASK = [0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff]
     RBYTE_MASK = [0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff]
     ret_vals = []

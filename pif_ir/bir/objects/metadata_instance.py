@@ -1,8 +1,8 @@
 import logging
 from collections import OrderedDict
 
-from pif_ir.bir.objects.bir_validate import check_attributes
 from pif_ir.bir.objects.value_instance import ValueInstance
+from pif_ir.bir.utils.validate import check_attributes
 
 class MetadataInstance(object):
     required_attributes = ['values', 'visibility']
@@ -41,7 +41,7 @@ class MetadataInstance(object):
             fld_offset += len(fld)
 
     def serialize(self):
-        byte_list = bytearray(len(self))
+        byte_list = bytearray(len(self)/8)
         bit_offset = 0;
         for fld in self.values.values():
             fld.update(byte_list, bit_offset)

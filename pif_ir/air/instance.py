@@ -16,15 +16,15 @@ import logging
 
 from pif_ir.meta_ir.instance import MetaIRInstance
 from pif_ir.meta_ir.common import *
-from objects.parser import Parser
-from objects.pipeline import Pipeline
-from objects.parser import Parser
-from objects.processor import Processor
-from objects.table import Table
-from objects.action import Action
-from objects.parsed_packet import ParsedPacket
-from objects.simple_queue import SimpleQueueManager
-from objects import table_entry
+
+from pif_ir.air.objects.parser import Parser
+from pif_ir.air.objects.pipeline import Pipeline
+from pif_ir.air.objects.processor import Processor
+from pif_ir.air.objects.table import Table
+from pif_ir.air.objects.action import Action
+from pif_ir.air.objects.parsed_packet import ParsedPacket
+from pif_ir.air.objects.simple_queue import SimpleQueueManager
+from pif_ir.air.objects import table_entry
 
 def hexify(buf, length):
     return ":".join(["%02x" % c for c in buf])

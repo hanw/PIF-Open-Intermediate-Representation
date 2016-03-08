@@ -8,7 +8,9 @@ import sys
 from threading import Condition
 
 from pif_ir.meta_ir.common import *
-from table_entry import TableEntryExact, TableEntryTernary, TableEntryDefault
+from pif_ir.air.objects.table_entry import TableEntryExact
+from pif_ir.air.objects.table_entry import TableEntryTernary
+from pif_ir.air.objects.table_entry import TableEntryDefault
 
 
 class Table(object):

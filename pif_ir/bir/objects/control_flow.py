@@ -1,9 +1,9 @@
 import logging
 
-from pif_ir.bir.objects.bir_exception import BIRControlStateError
-from pif_ir.bir.objects.bir_validate import check_attributes
 from pif_ir.bir.objects.basic_block import BasicBlock
 from pif_ir.bir.objects.processor import Processor
+from pif_ir.bir.utils.exceptions import BIRControlStateError
+from pif_ir.bir.utils.validate import check_attributes
 
 class ControlFlow(Processor):
     """

@@ -5,7 +5,7 @@ import threading
 import sys
 
 from pif_ir.meta_ir.common import *
-from processor import ThreadedProcessor
+from pif_ir.air.objects.processor import ThreadedProcessor
 
 class SimpleQueueManager(ThreadedProcessor):
     """

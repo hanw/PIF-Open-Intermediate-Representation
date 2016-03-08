@@ -9,8 +9,8 @@ import copy
 import sys
 
 from pif_ir.meta_ir.common import *
-from air_exception import *
-from header import HeaderInstance
+from pif_ir.air.objects.header import HeaderInstance
+from pif_ir.air.utils.air_exception import *
 
 class ParsedPacket(object):
     """

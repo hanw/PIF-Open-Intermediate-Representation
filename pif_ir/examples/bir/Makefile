@@ -8,9 +8,6 @@ PYPATH=PYTHONPATH=${ROOT_DIR}/:${OFTEST_PYTHON}
 sample: submodule
 	sudo ${PYPATH} ./start.py bir_sample.yml
 
-mpls: submodule
-	sudo ${PYPATH} ./start.py bir_mpls.yml
-
 %.yml: submodule
 	sudo ${PYPATH} ./start.py $@
 

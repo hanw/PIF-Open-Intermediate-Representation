@@ -1,11 +1,11 @@
 
-def ipv4(ipv4_header):
-    ipv4_header.set_value("chksum", 0)
+def ipv4(ipv4_header_out, ipv4_header_in):
+    ipv4_header_in.set_value("chksum", 0)
 
     shift = False
     tot = 0
     tmp = 0
-    for b in ipv4_header.serialize():
+    for b in ipv4_header_in.serialize():
         if shift:
             tmp = (tmp << 8) + b
             tot += tmp
@@ -19,4 +19,4 @@ def ipv4(ipv4_header):
         lhs = tot >> 16
         tot = lhs + rhs
 
-    ipv4_header.set_value("chksum", ~tot)
+    ipv4_header_out.set_value("chksum", ~tot)

@@ -1,5 +1,5 @@
 
-def ipv4(ipv4_header_in, ipv4_header_out):
+def ipv4(ipv4_header_out, ipv4_header_in):
     ipv4_header_in.set_value("chksum", 0)
 
     shift = False

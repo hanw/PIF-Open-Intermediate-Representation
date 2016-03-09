@@ -143,13 +143,14 @@ class BasicBlock(object):
 
         # TODO: to ensure correctness, the data_in should be a copy of the 
         #       metadata instance.
-        data_in = instruction[2][0]
+        data_out = instruction[2][0]
+        if data_out:
+            data_out = packet.metadata[data_out]
+
+        data_in = instruction[2][1]
         if data_in:
             data_in = packet.metadata[data_in]
 
-        data_out = instruction[2][1]
-        if data_out:
-            data_out = packet.metadata[data_out]
         module(data_in, data_out)
 
     def process(self, packet, bit_offset=0):

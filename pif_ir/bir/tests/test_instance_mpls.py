@@ -5,7 +5,7 @@ import struct
 import sys
 
 from pif_ir.bir.instance import BirInstance
-from pif_ir.bir.objects.bir_exception import BIRError
+from pif_ir.bir.utils.exceptions import BIRError
 
 logging.basicConfig(level=logging.INFO)
 logging.info("RUNNING TEST: %s" % __file__)

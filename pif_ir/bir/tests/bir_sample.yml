@@ -1,5 +1,5 @@
 # ----- ----- ----- ----- ----- ----- ----- -----
-# Struct Formats
+# Structs
 # ----- ----- ----- ----- ----- ----- ----- -----
 ethernet_t:
     type: struct
@@ -131,7 +131,7 @@ bb_table_udp:
     type:           basic_block
     local_table:    table_0
     instructions:
-        - [S, table_0_resp, table_0_req]
+        - [O, tLookup, [table_0_resp, table_0_req]]
     next_control_state:
         - $offset$
         - [table_0_resp.hit == 1 && table_0_resp.p4_action == 1, bb_action_0]
@@ -199,7 +199,7 @@ deparser:
         - deparse_eth
 
 # ----- ----- ----- ----- ----- ----- ----- -----
-# Layout
+# System
 # ----- ----- ----- ----- ----- ----- ----- -----
 a_p4_switch:
     type:       processor_layout

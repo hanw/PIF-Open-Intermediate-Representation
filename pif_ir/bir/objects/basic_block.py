@@ -106,47 +106,51 @@ class BasicBlock(object):
         self._assign(instruction[1], result, self.local_header, packet,
                      bit_offset)
 
-    def _handle_s_call(self, instruction, packet, bit_offset):
-        resp = packet.metadata[instruction[1]]
-        req = packet.metadata[instruction[2]]
-        if self.local_table:
-            self.local_table.lookup(req, resp)
+    def _handle_o_call(self, instruction, packet, bit_offset):
+        """ Built-in Operations
+        """
+        op = instruction[1]
+        args = instruction[2]
 
-    def _get_m_call_args(self, sig, packet):
-        ret = []
-        for s in sig:
-            tmp = s.split('.')
-            if len(tmp) == 1:
-                ret.append(packet.metadata[tmp[0]])
-            else:
-                ret.append(packet.metadata[tmp[0]].values[tmp[1]])
-        return ret
+        if op == 'tLookup':
+            resp = packet.metadata[args[0]]
+            req = packet.metadata[args[1]]
+            if self.local_table:
+                self.local_table.lookup(req, resp)
+
+        elif op == 'hInsert':
+            length = args[0] if len(args) > 0 else len(self.local_header)
+            packet.insert(length, bit_offset)
+        elif op == 'hRemove':
+            length = args[0] if len(args) > 0 else len(self.local_header)
+            packet.remove(length, bit_offset)
+        elif op == 'tInsert':
+            pass    # FIXME: to be implemented
+        elif op == 'tRemove':
+            pass    # FIXME: to be implemented
+        else:
+            raise BIRRefError(op, self.name)
 
     def _handle_m_call(self, instruction, packet, bit_offset):
-        # built in cases: hInsert, hRemove, eInsert, eRemove
-        if instruction[1] == 'hInsert':
-            length = len(self.local_header)
-            if len(instruction[2]) > 0:
-                length = instruction[2][0]
-            packet.insert(length, bit_offset)
+        op = instruction[1]
+        if op not in self.other_modules.keys():
+            raise BIRRefError(instruction[1], self.name)
+        module = self.other_modules[op]
 
-        elif instruction[1] == 'hRemove':
-            length = len(self.local_header)
-            if len(instruction[2]) > 0:
-                length = instruction[2][0]
-            packet.remove(length, bit_offset)
+        if len(instruction[2]) != 2:
+            raise BIRInstructionListError(self.name,
+                                          "M instructions require 2 arguments")
 
-        elif instruction[1] == 'eInsert':
-            pass    # FIXME: to be implemented
-        elif instruction[1] == 'eRemove':
-            pass    # FIXME: to be implemented
+        # TODO: to ensure correctness, the data_in should be a copy of the 
+        #       metadata instance.
+        data_in = instruction[2][0]
+        if data_in:
+            data_in = packet.metadata[data_in]
 
-        else:
-            args = self._get_m_call_args(instruction[2], packet)
-            if instruction[1] not in self.other_modules.keys():
-                raise BIRRefError(instruction[1], self.name)
-            module = self.other_modules[instruction[1]]
-            module(*args)
+        data_out = instruction[2][1]
+        if data_out:
+            data_out = packet.metadata[data_out]
+        module(data_in, data_out)
 
     def process(self, packet, bit_offset=0):
         check_basic_block_instructions(self.name, self.instructions)
@@ -154,8 +158,8 @@ class BasicBlock(object):
         for inst in self.instructions:
             if inst[0] == 'V':
                 self._handle_v_call(inst, packet, bit_offset)
-            elif inst[0] == 'S':
-                self._handle_s_call(inst, packet, bit_offset)
+            elif inst[0] == 'O':
+                self._handle_o_call(inst, packet, bit_offset)
             elif inst[0] == 'M':
                 self._handle_m_call(inst, packet, bit_offset)
             else:

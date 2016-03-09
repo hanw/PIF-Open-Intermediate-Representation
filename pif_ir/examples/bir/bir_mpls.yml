@@ -86,7 +86,7 @@ bb_mpls:
     local_table:    mpls_value_set
     instructions:
         - [V, mpls_value_set_req.label, label]
-        - [S, mpls_value_set_resp, mpls_value_set_req]
+        - [O, tLookup, [mpls_value_set_resp, mpls_value_set_req]]
     next_control_state:
         - $offset$ + 32
         - [mpls_value_set_resp.hit == 1, bb_ipv4]

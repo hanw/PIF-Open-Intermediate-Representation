@@ -88,7 +88,7 @@ parse_ipv4:
         - [V, ipv4.chksum, chksum]
         - [V, ipv4.src, src]
         - [V, ipv4.dst, dst]
-        - [M, checksum.ipv4, [ipv4]]
+        - [M, checksum.ipv4, [ipv4, ipv4]]
     next_control_state:
         - $offset$ + 160
         - $done$

@@ -58,3 +58,11 @@ class BIRInstructionListError(BIRError):
         super(BIRInstructionListError, self).__init__()
         self.value = "bad instruction list in object({}): {}".format(obj_name,
                                                                      msg)
+
+class BIRParsingError(BIRError):
+    """ something went wrong while parsing an instruction or control state
+    """
+    def __init__(self, msg):
+        super(BIRParsingError, self).__init__()
+        self.value = msg
+    

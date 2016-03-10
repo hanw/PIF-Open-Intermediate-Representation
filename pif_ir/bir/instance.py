@@ -13,6 +13,7 @@ import logging
 from importlib import import_module
 
 from pif_ir.meta_ir.instance import MetaIRInstance
+
 from pif_ir.bir.objects import table_entry
 from pif_ir.bir.objects.basic_block import BasicBlock
 from pif_ir.bir.objects.bir_struct import BIRStruct
@@ -22,9 +23,9 @@ from pif_ir.bir.objects.metadata_instance import MetadataInstance
 from pif_ir.bir.objects.packet_instance import PacketInstance
 from pif_ir.bir.objects.processor import Processor
 from pif_ir.bir.objects.table import Table
+
 from pif_ir.bir.utils.exceptions import BIRError
-from pif_ir.bir.utils.instruction_parser import InstructionParser
-from pif_ir.bir.utils.ncs_parser import NCSParser
+from pif_ir.bir.utils.bir_parser import BIRParser
 
 def hexify(buf, bpl=16):
     """
@@ -60,8 +61,7 @@ class BirInstance(MetaIRInstance):
 
         # create parsers to handle next_control_states, and the
         # F instructions
-        ncs_parser = NCSParser()
-        inst_parser = InstructionParser()
+        bir_parser = BIRParser()
 
         # BIR objects
         self.bir_structs = {}
@@ -85,8 +85,7 @@ class BirInstance(MetaIRInstance):
                                                      self.bir_structs, 
                                                      self.bir_tables, 
                                                      self.bir_other_modules,
-                                                     ncs_parser, 
-                                                     inst_parser)
+                                                     bir_parser)
         for name, val in self.control_flow.items():
             self.bir_control_flows[name] = ControlFlow(name, val,
                                                        self.bir_basic_blocks)

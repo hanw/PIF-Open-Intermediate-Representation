@@ -1,0 +1,138 @@
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Other Modules
+# ----- ----- ----- ----- ----- ----- ----- -----
+checksum:
+    type:       other_module
+    operations: 
+        - ipv4
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Struct Formats
+# ----- ----- ----- ----- ----- ----- ----- -----
+ethernet_t:
+    type: struct
+    fields:
+        - dst:      48
+        - src:      48
+        - type_:    16
+
+ipv4_t:
+    type: struct
+    fields:
+        - version:  4
+        - ihl:      4
+        - tos:      8
+        - len:      16
+        - id:       16
+        - flags:    3
+        - frag:     13
+        - ttl:      8
+        - proto:    8
+        - chksum:   16
+        - src:      32
+        - dst:      32
+
+table_0_req_t:
+    type: struct
+    fields:
+        - dport:        16
+
+table_0_resp_t:
+    type : struct
+    fields:
+        - hit:              1
+        - p4_action:        2
+        - action_0_arg0:    16
+        - action_1_arg0:    16
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Metadata Instances
+# ----- ----- ----- ----- ----- ----- ----- -----
+eth:
+    type:       metadata
+    values:     ethernet_t
+    visibility: none
+
+ipv4:
+    type:       metadata
+    values:     ipv4_t
+    visibility: none
+
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Parser
+# ----- ----- ----- ----- ----- ----- ----- -----
+parse_eth:
+    type:           basic_block
+    local_header:   ethernet_t
+    instructions:
+        - [V, eth.type_, type_]
+    next_control_state:
+        - $offset$ + 112
+        - [type_ == 0x0800, parse_ipv4]
+        - $done$
+
+parse_ipv4:
+    type:           basic_block
+    local_header:   ipv4_t
+    instructions:
+        - [V, ipv4.version, version]
+        - [V, ipv4.ihl, ihl]
+        - [V, ipv4.tos, tos]
+        - [V, ipv4.len, len]
+        - [V, ipv4.id, id]
+        - [V, ipv4.flags, flags]
+        - [V, ipv4.frag, frag]
+        - [V, ipv4.ttl, ttl - 1]
+        - [V, ipv4.proto, proto]
+        - [V, ipv4.chksum, chksum]
+        - [V, ipv4.src, src]
+        - [V, ipv4.dst, dst]
+        - [M, checksum.ipv4, [ipv4, ipv4]]
+    next_control_state:
+        - $offset$ + 160
+        - $done$
+
+parser:
+    type: control_flow
+    start_control_state: 
+        - 0
+        - parse_eth
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Deparser
+# ----- ----- ----- ----- ----- ----- ----- -----
+deparse_eth:
+    type:           basic_block
+    local_header:   ethernet_t
+    instructions:   []
+    next_control_state:
+        - $offset$ + 112
+        - [eth.type_ == 0x0800, deparse_ipv4]
+        - $done$
+
+deparse_ipv4:
+    type:           basic_block
+    local_header:   ipv4_t
+    instructions:
+        - [V, ttl, ipv4.ttl]
+        - [V, chksum, ipv4.chksum]
+    next_control_state:
+        - $offset$ + 160
+        - $done$
+
+deparser:
+    type: control_flow
+    start_control_state: 
+        - 0
+        - deparse_eth
+
+# ----- ----- ----- ----- ----- ----- ----- -----
+# Layout
+# ----- ----- ----- ----- ----- ----- ----- -----
+a_p4_switch:
+    type:       processor_layout
+    format:     list
+    implementation:
+        - parser
+        - deparser

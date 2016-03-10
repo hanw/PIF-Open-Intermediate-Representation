@@ -18,7 +18,7 @@ class BasicBlock(object):
     required_attributes = ['instructions', 'next_control_state']
 
     def __init__(self, name, bb_attrs, bir_headers, bir_tables, 
-                 bir_other_modules, ncs_parser, inst_parser):
+                 bir_other_modules, bir_parser):
         check_attributes(name, bb_attrs, BasicBlock.required_attributes)
         logging.debug("Adding basic_block {0}".format(name))
 
@@ -34,8 +34,7 @@ class BasicBlock(object):
         self._handle_next_control_state(bb_attrs['next_control_state'])
 
         self.other_modules = bir_other_modules
-        self.inst_parser = inst_parser
-        self.ncs_parser = ncs_parser
+        self.bir_parser = bir_parser
 
         # set the local_header
         header_name = bb_attrs.get('local_header', None)
@@ -83,25 +82,25 @@ class BasicBlock(object):
     def _get_next_offset(self, packet, bit_offset):
         for cond in self.next_offset:
             if cond[0] == True:
-                return self.ncs_parser.evaluate(cond[1], self.local_header,
-                                                packet, bit_offset)
+                return self.bir_parser.eval_inst(cond[1], self.local_header,
+                                                 packet, bit_offset)
 
-            elif self.ncs_parser.evaluate(cond[0], self.local_header, packet,
-                                        bit_offset):
-                return self.ncs_parser.evaluate(cond[1], self.local_header,
-                                                packet, bit_offset)
+            elif self.bir_parser.eval_cond(cond[0], self.local_header, packet,
+                                           bit_offset):
+                return self.bir_parser.eval_inst(cond[1], self.local_header,
+                                                 packet, bit_offset)
         raise BIRControlStateError(self.name)
 
     def _get_next_state(self, packet, bit_offset):
         for cond in self.next_state:
             if cond[0] == True:
                 return cond[1]
-            elif self.ncs_parser.evaluate(cond[0], self.local_header, packet, 
-                                 bit_offset):
+            elif self.bir_parser.eval_cond(cond[0], self.local_header, packet, 
+                                           bit_offset):
                 return cond[1]
 
     def _handle_v_call(self, instruction, packet, bit_offset):
-        result = self.inst_parser.evaluate(instruction[2], self.local_header,
+        result = self.bir_parser.eval_inst(instruction[2], self.local_header,
                                            packet, bit_offset)
         self._assign(instruction[1], result, self.local_header, packet,
                      bit_offset)

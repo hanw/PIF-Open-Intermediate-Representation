@@ -6,6 +6,7 @@ test:
 	@./test_metadata_instance.py
 	@./test_table.py
 	@./test_packet_instance.py
-	@./test_ncs_parser.py
+	@./test_parser.py
 	@./test_instance.py
+	@./test_instance_mpls.py
 

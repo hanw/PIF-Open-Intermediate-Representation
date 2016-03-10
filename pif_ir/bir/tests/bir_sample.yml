@@ -93,9 +93,8 @@ parse_eth:
     instructions:
         - [V, meta.eth_type_, type_]
     next_control_state:
-        - $offset$ + 112
-        - [type_ == 0x0800, parse_ipv4]
-        - $done$
+        - [$offset$ + 112]
+        - [[type_ == 0x0800, parse_ipv4], $done$]
 
 parse_ipv4:
     type:           basic_block
@@ -103,9 +102,8 @@ parse_ipv4:
     instructions:
         - [V, meta.ipv4_proto, proto]
     next_control_state:
-        - $offset$ + 160
-        - [proto == 17, parse_udp]
-        - $done$
+        - [$offset$ + 160]
+        - [[proto == 17, parse_udp], $done$]
 
 parse_udp:
     type:           basic_block
@@ -115,14 +113,14 @@ parse_udp:
         - [V, meta.udp_chksum, chksum]
         - [V, table_0_req.dport, dport]
     next_control_state: 
-        - $offset$ + 64
-        - $done$
+        - [$offset$ + 64]
+        - [$done$]
 
 parser:
     type: control_flow
     start_control_state: 
-        - 0
-        - parse_eth
+        - [0]
+        - [parse_eth]
 
 # ----- ----- ----- ----- ----- ----- ----- -----
 # Match+Action Pipeline
@@ -133,18 +131,16 @@ bb_table_udp:
     instructions:
         - [O, tLookup, [table_0_resp, table_0_req]]
     next_control_state:
-        - $offset$
-        - [table_0_resp.hit == 1 && table_0_resp.p4_action == 1, bb_action_0]
-        - [table_0_resp.hit == 1 && table_0_resp.p4_action == 2, bb_action_1]
-        - $done$
+        - [$offset$]
+        - [[table_0_resp.hit == 1 && table_0_resp.p4_action == 1, bb_action_0], [table_0_resp.hit == 1 && table_0_resp.p4_action == 2, bb_action_1], $done$]
 
 bb_action_0:
     type:           basic_block
     instructions:
         - [V, meta.udp_dport, table_0_resp.action_0_arg_0]
     next_control_state:
-        - $offset$
-        - $done$
+        - [$offset$]
+        - [$done$]
 
 
 bb_action_1:
@@ -152,14 +148,14 @@ bb_action_1:
     instructions:
         - [V, meta.udp_chksum, table_0_resp.action_1_arg_0]
     next_control_state:
-        - $offset$
-        - $done$
+        - [$offset$]
+        - [$done$]
 
 ingress_control:
     type: control_flow
     start_control_state: 
-        - 0
-        - bb_table_udp
+        - [0]
+        - [bb_table_udp]
 
 # ----- ----- ----- ----- ----- ----- ----- -----
 # Deparser
@@ -169,18 +165,16 @@ deparse_eth:
     local_header:   ethernet_t
     instructions:   []
     next_control_state:
-        - $offset$ + 112
-        - [meta.eth_type_ == 0x0800, deparse_ipv4]
-        - $done$
+        - [$offset$ + 112]
+        - [[meta.eth_type_ == 0x0800, deparse_ipv4], $done$]
 
 deparse_ipv4:
     type:           basic_block
     local_header:   ipv4_t
     instructions:   []
     next_control_state:
-        - $offset$ + 160
-        - [meta.ipv4_proto == 17, deparse_udp]
-        - $done$
+        - [$offset$ + 160]
+        - [[meta.ipv4_proto == 17, deparse_udp], $done$]
 
 deparse_udp:
     type:           basic_block
@@ -189,14 +183,14 @@ deparse_udp:
         - [V, dport, meta.udp_dport]
         - [V, chksum, meta.udp_chksum]
     next_control_state:
-        - $offset$ + 64
-        - $done$
+        - [$offset$ + 64]
+        - [$done$]
 
 deparser:
     type: control_flow
     start_control_state: 
-        - 0
-        - deparse_eth
+        - [0]
+        - [deparse_eth]
 
 # ----- ----- ----- ----- ----- ----- ----- -----
 # System

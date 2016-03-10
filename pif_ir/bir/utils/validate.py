@@ -29,3 +29,35 @@ def check_basic_block_instructions(obj_name, instructions):
                                               "multiple hInsert/hRemove calls")
             has_h_call = True
 
+def check_control_state(obj_name, control_state_attributes):
+    # has only 2 attributes (i.e. offset, basic_block)
+    if len(control_state_attributes) != 2:
+        raise BIRControlStateError(obj_name, "expecting 2 attributes")
+
+    # offset conditions format must be [cond, offset]
+    # must have a default offset (not required to be the last!)
+    default_offset = False
+    for cond in control_state_attributes[0]:
+        if isinstance(cond, list) and len(cond) == 2:
+            pass
+        elif isinstance(cond, str) or isinstance(cond, int):
+            default_offset = True
+        else:
+            msg = "unexpected offset condition: {}".format(cond)
+            raise BIRControlStateError(obj_name, msg)
+    if not default_offset:
+        raise BIRControlStateError(obj_name, "missing default offset")
+
+    # basic_block conditions format must be [cond, basic_block]
+    # must have a default basic_block (not required to be the last!)
+    default_bb = False
+    for cond in control_state_attributes[1]:
+        if isinstance(cond, list) and len(cond) == 2:
+            pass
+        elif isinstance(cond, str):
+            default_bb = True
+        else:
+            msg = "unexpected basic_block condition: {}".format(cond)
+            raise BIRControlStateError(obj_name, msg)
+    if not default_bb:
+        raise BIRControlStateError(obj_name, "missing default basic block")

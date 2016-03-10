@@ -26,7 +26,7 @@ class ControlFlow(Processor):
 
         cf = control_flow_attrs['start_control_state']
         check_control_state(self.name, cf)
-        self.control_state = ControlState(cf, bir_parser)
+        self.control_state = ControlState(cf, None, bir_parser)
 
     def process(self, packet, bit_offset=0):
         """
@@ -35,8 +35,7 @@ class ControlFlow(Processor):
         @param packet A packet instance to be processed
         @return result from the final basic block executed in control flow
         """
-        offset, basic_block = self.control_state.process(None, packet,
-                                                         bit_offset)
+        offset, basic_block = self.control_state.process(packet, bit_offset)
         msg = "packet {} entered control_flow({}) with offset({})".format(
             packet.idx, self.name, offset)
         logging.debug(msg)

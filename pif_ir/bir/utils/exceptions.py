@@ -45,19 +45,18 @@ class BIRTableEntryError(BIRError):
         self.value = "bad entry to table({})".format(name)
 
 class BIRControlStateError(BIRError):
-    """ a control_state is not correctly formatted
+    """ incorrectly formatted ControlState object
     """
-    def __init__(self, obj_name):
+    def __init__(self, obj_name, msg):
         super(BIRControlStateError, self).__init__()
-        self.value = "bad control_state in object({})".format(obj_name)
+        self.value = "object({}): {}".format(obj_name, msg)
 
-class BIRInstructionListError(BIRError):
-    """ a basic block instruction list is not correctly formatted
+class BIRInstructionError(BIRError):
+    """ incorrectly formatted Instruction object
     """
     def __init__(self, obj_name, msg):
         super(BIRInstructionListError, self).__init__()
-        self.value = "bad instruction list in object({}): {}".format(obj_name,
-                                                                     msg)
+        self.value = "object({}}: {}".format(obj_name, msg)
 
 class BIRParsingError(BIRError):
     """ something went wrong while parsing an instruction or control state

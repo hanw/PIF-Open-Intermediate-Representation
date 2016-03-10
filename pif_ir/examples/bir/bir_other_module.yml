@@ -68,9 +68,8 @@ parse_eth:
     instructions:
         - [V, eth.type_, type_]
     next_control_state:
-        - $offset$ + 112
-        - [type_ == 0x0800, parse_ipv4]
-        - $done$
+        - [$offset$ + 112]
+        - [[type_ == 0x0800, parse_ipv4], $done$]
 
 parse_ipv4:
     type:           basic_block
@@ -90,14 +89,14 @@ parse_ipv4:
         - [V, ipv4.dst, dst]
         - [M, checksum.ipv4, [ipv4, ipv4]]
     next_control_state:
-        - $offset$ + 160
-        - $done$
+        - [$offset$ + 160]
+        - [$done$]
 
 parser:
     type: control_flow
     start_control_state: 
-        - 0
-        - parse_eth
+        - [0]
+        - [parse_eth]
 
 # ----- ----- ----- ----- ----- ----- ----- -----
 # Deparser
@@ -107,9 +106,8 @@ deparse_eth:
     local_header:   ethernet_t
     instructions:   []
     next_control_state:
-        - $offset$ + 112
-        - [eth.type_ == 0x0800, deparse_ipv4]
-        - $done$
+        - [$offset$ + 112]
+        - [[eth.type_ == 0x0800, deparse_ipv4], $done$]
 
 deparse_ipv4:
     type:           basic_block
@@ -118,14 +116,14 @@ deparse_ipv4:
         - [V, ttl, ipv4.ttl]
         - [V, chksum, ipv4.chksum]
     next_control_state:
-        - $offset$ + 160
-        - $done$
+        - [$offset$ + 160]
+        - [$done$]
 
 deparser:
     type: control_flow
     start_control_state: 
-        - 0
-        - deparse_eth
+        - [0]
+        - [deparse_eth]
 
 # ----- ----- ----- ----- ----- ----- ----- -----
 # Layout

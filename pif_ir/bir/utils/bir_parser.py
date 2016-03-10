@@ -108,14 +108,14 @@ class BIRParser(object):
         self.packet = packet
         self.bit_offset = bit_offset
         self.exp = str(expression)
-        return self.inst_parser.parse(str(expression), lexer=self.lexer)
+        return self.inst_parser.parse(self.exp, lexer=self.lexer)
 
     def eval_cond(self, expression, header, packet, bit_offset=0):
         self.header = header
         self.packet = packet
         self.bit_offset = bit_offset
         self.exp = str(expression)
-        return self.cond_parser.parse(str(expression), lexer=self.lexer)
+        return self.cond_parser.parse(self.exp, lexer=self.lexer)
 
     precedence = (
         ('left', 'LOR'),
@@ -216,11 +216,12 @@ class BIRParser(object):
         """
         p[0] = p[1]
 
-    # field_ref: bit offset to the packet
+    # field_ref: BIR keywords
     def p_field_ref_0(self, p):
         """ field_ref : OFFSET
+                      | DONE
         """
-        p[0] = self.bit_offset
+        p[0] = self.bit_offset if p[1] == "$offset$" else None
 
     # field_ref: header field value in the packet
     def p_field_ref_1(self, p):

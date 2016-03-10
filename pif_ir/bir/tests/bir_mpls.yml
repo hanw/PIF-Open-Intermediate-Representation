@@ -77,9 +77,8 @@ bb_eth:
     local_header:   ethernet_t
     instructions:   []
     next_control_state:
-        - $offset$ + 112
-        - [type_ == 0x8847, bb_mpls]
-        - $done$
+        - [$offset$ + 112]
+        - [[type_ == 0x8847, bb_mpls], $done$]
 
 bb_mpls:
     type:           basic_block
@@ -89,9 +88,8 @@ bb_mpls:
         - [V, mpls_value_set_req.label, label]
         - [O, tLookup, [mpls_value_set_resp, mpls_value_set_req]]
     next_control_state:
-        - $offset$ + 32
-        - [mpls_value_set_resp.hit == 1, bb_ipv4]
-        - $done$
+        - [$offset$ + 32]
+        - [[mpls_value_set_resp.hit == 1, bb_ipv4], $done$]
 
 bb_ipv4:
     type:           basic_block
@@ -100,14 +98,14 @@ bb_ipv4:
         - [V, flags, mpls_value_set_resp.flags]
         - [V, frag, mpls_value_set_resp.frag]
     next_control_state:
-        - $offset$ + 160
-        - $done$
+        - [$offset$ + 160]
+        - [$done$]
 
 parser:
     type: control_flow
     start_control_state: 
-        - 0
-        - bb_eth
+        - [0]
+        - [bb_eth]
 
 # ----- ----- ----- ----- ----- ----- ----- -----
 # System

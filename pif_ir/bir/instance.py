@@ -88,7 +88,8 @@ class BirInstance(MetaIRInstance):
                                                      bir_parser)
         for name, val in self.control_flow.items():
             self.bir_control_flows[name] = ControlFlow(name, val,
-                                                       self.bir_basic_blocks)
+                                                       self.bir_basic_blocks,
+                                                      bir_parser)
         
         # BIR processor layout
         for layout in self.processor_layout.values():

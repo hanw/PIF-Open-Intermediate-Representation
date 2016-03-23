@@ -208,6 +208,7 @@ a_p4_switch:
 # ----- ----- ----- ----- ----- ----- ----- -----
 table_initialization:
     - table_0:
+        match_type: exact
         key:
             dport : 0x3333
         value:
@@ -216,6 +217,7 @@ table_initialization:
             action_0_arg0:    0xFFFF
             action_1_arg0:    0
     - table_0:
+        match_type: exact
         key:
             dport : 0x4444
         value:

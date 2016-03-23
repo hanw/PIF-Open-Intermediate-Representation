@@ -40,9 +40,9 @@ class BIRTableTypeError(BIRError):
 class BIRTableEntryError(BIRError):
     """ an entry couldn't be added to table
     """
-    def __init__(self, name):
+    def __init__(self, name, msg):
         super(BIRTableEntryError, self).__init__()
-        self.value = "bad entry to table({})".format(name)
+        self.value = "table({}): {}".format(name, msg)
 
 class BIRControlStateError(BIRError):
     """ incorrectly formatted ControlState object

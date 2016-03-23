@@ -14,7 +14,6 @@ from importlib import import_module
 
 from pif_ir.meta_ir.instance import MetaIRInstance
 
-from pif_ir.bir.objects import table_entry
 from pif_ir.bir.objects.basic_block import BasicBlock
 from pif_ir.bir.objects.bir_struct import BIRStruct
 from pif_ir.bir.objects.control_flow import ControlFlow
@@ -23,6 +22,7 @@ from pif_ir.bir.objects.metadata_instance import MetadataInstance
 from pif_ir.bir.objects.packet_instance import PacketInstance
 from pif_ir.bir.objects.processor import Processor
 from pif_ir.bir.objects.table import Table
+from pif_ir.bir.objects.table_entry import TableEntry
 
 from pif_ir.bir.utils.exceptions import BIRError
 from pif_ir.bir.utils.bir_parser import BIRParser
@@ -112,8 +112,10 @@ class BirInstance(MetaIRInstance):
     def process_table_init(self):
         for init_entry in self.table_init:
             for table_name, entry_desc in init_entry.items():
-                ent = table_entry.TableEntryExact(entry_desc['key'],
-                                                  entry_desc['value'])
+                ent = TableEntry(entry_desc['match_type'],
+                                 entry_desc['value'],
+                                 entry_desc['key'],
+                                 entry_desc.get('mask', None))
                 self.bir_tables[table_name].add_entry(ent)
 
     def enable(self):

@@ -18,9 +18,9 @@ from pif_ir.bir.objects.basic_block import BasicBlock
 from pif_ir.bir.objects.bir_struct import BIRStruct
 from pif_ir.bir.objects.control_flow import ControlFlow
 from pif_ir.bir.objects.metadata_instance import MetadataInstance
-#from pif_ir.bir.objects.other_processor import OtherProcessor
 from pif_ir.bir.objects.packet_instance import PacketInstance
 from pif_ir.bir.objects.processor import Processor
+from pif_ir.bir.objects.processor import ThreadedProcessor
 from pif_ir.bir.objects.table import Table
 from pif_ir.bir.objects.table_entry import TableEntry
 
@@ -53,11 +53,10 @@ class BirInstance(MetaIRInstance):
 
         self.name = name
         self.add_content(input)
-        self.transmit_handler = transmit_handler
         self.transmit_processor = TransmitProcessor(transmit_handler)
 
         self.disabled = True
-        self.op_started = False
+        self.other_processors_running = False
 
         # create parsers to handle next_control_states, and the
         # F instructions
@@ -69,7 +68,8 @@ class BirInstance(MetaIRInstance):
         self.bir_other_modules = {}
         self.bir_basic_blocks = {}
         self.bir_control_flows = {}
-        self.processors = []
+        self.bir_other_processors = {}
+        self.start_processor = []
         self.table_init = []
 
         for name, val in self.struct.items():
@@ -90,13 +90,25 @@ class BirInstance(MetaIRInstance):
             self.bir_control_flows[name] = ControlFlow(name, val,
                                                        self.bir_basic_blocks,
                                                       bir_parser)
-        
+        for name, val in self.other_processor.items():
+            self.bir_other_processors[name] = self._load_processor(name,
+                                                                   val['class'])
+
         # BIR processor layout
         for layout in self.processor_layout.values():
             if layout['format'] != 'list':
                 logging.error("usupported layout format")
                 exit(1)
-            self.processors = layout['implementation']
+
+            last_proc = None
+            for proc_name in layout['implementation']:
+                curr_proc = self._get_processor(proc_name)
+                if last_proc == None:
+                    self.start_processor = curr_proc
+                else:
+                    last_proc.next_processor = curr_proc
+                last_proc = curr_proc
+            last_proc.next_processor = self.transmit_processor
 
         # Table initialization is part of the YAML until an API can be 
         # created
@@ -109,6 +121,19 @@ class BirInstance(MetaIRInstance):
         other_module = import_module(module_name)
         return getattr(other_module, operation)
 
+    def _load_processor(self, name, class_name):
+        proc_name = "pif_ir.bir.objects.other_processor.{}".format(name)
+        other_processor = import_module(proc_name)
+        return getattr(other_processor, class_name)
+
+    def _get_processor(self, name):
+        if name in self.bir_control_flows.keys():
+            return self.bir_control_flows[name]
+        elif name in self.bir_other_processors.keys():
+            return self.bir_other_processors[name]
+        else:
+            raise BIRError("unknown processor: {}".format(name))
+
     def process_table_init(self):
         for init_entry in self.table_init:
             for table_name, entry_desc in init_entry.items():
@@ -119,38 +144,28 @@ class BirInstance(MetaIRInstance):
                 self.bir_tables[table_name].add_entry(ent)
 
     def enable(self):
-        """
-        @brief Enable the switch instance
+        # if the other processors are not running start them
+        if not self.other_processors_running:
+            for name, proc in self.bir_other_processors.items():
+                if isinstance(proc, ThreadedProcessor):
+                    logging.debug("starting Processor: {}".format(name))
+                    proc.start()
+            self.other_processors_running = True
 
-        Start the other processor threads and allow packets to enter
-        the processor chain
-        """
-        #if not self.op_started:
-        #    for name, op in self.bir_other_processor.items():
-        #        logging.debug("Starting OP %s" % name)
-        #        op.start()
-        #    op_started = True
-
-        logging.debug("Enabling switch %s" % self.name)
+        logging.debug("enabling switch {}".format(self.name))
         self.disabled = False
 
     def disable(self):
-        """
-        @brief Disable the switch instance
-        Packets on ingress are discarded while the switch is disabled.
-        Other processor threads are not stopped.
-        """
-        logging.debug("Disabling switch %s" % self.name)
+        logging.debug("disabling switch {}".format(self.name))
         self.disabled = True
 
-#    def kill(self):
-#        """
-#        """
-#        if self.op_started:
-#            for name, op in self.bir_other_processor.items():
-#                logging.debug("Stopping OP %s" % name)
-#                op.kill()
-#                op.join()
+    def kill(self):
+        if self.other_processors_running:
+            for name, proc in self.bir_other_processors.items():
+                if isinstance(proc, ThreadedProcessor):
+                    logging.debug("stopping processor: {}".format(name))
+                    proc.kill()
+                    proc.join()
 
     def process_packet(self, in_port, packet_data):
         if self.disabled:
@@ -160,37 +175,19 @@ class BirInstance(MetaIRInstance):
             packet = PacketInstance(buf, self.metadata, self.bir_structs)
             logging.info("Packet {} start: {}".format(packet.idx, hexify(buf)))
 
-            for control_flow in self.processors:
-                try:
-                    self.bir_control_flows[control_flow].process(packet)
-                except BIRError as e:
-                    print e.value
-                    exit(1)
-
-            buf = packet.packet_data
-            logging.info("Packet {} result: {}".format(packet.idx, 
-                                                       hexify(buf)))
-            logging.info("----- ----- ----- ----- ----- ----- ----- -----")
+            try:
+                self.start_processor.process(packet)
+            except BIRError as e:
+                print e.value
+                exit(1)
 
 class TransmitProcessor(Processor):
-    """
-    @brief Wrapper class to connect processing with transmitting packets
-    @param transmit_handler A function that knows how to send a packet to a port
-    """
     def __init__(self, transmit_handler):
+        super(TransmitProcessor, self).__init__("transmit")
         self.transmit_handler = transmit_handler
-        self.name = "transmit_processor"
 
-    def process(self, packet):
-        """
-        @brief Process interface that sends a packet
-        @param packet The packet instance to transmit
-        """
-        packet_data = packet.packet_data
-        out_port= packet.get_field("intrinsic_metadata.egress_port")
-
-        logging.debug("Transmit pkt id %d to %d" % (packet.id, out_port))
-        buf = bytearray(packet_data)
-        logging.debug(hexify(buf))
-        self.transmit_handler(out_port, packet_data)
-
+    def process(self, packet, bit_offset=0):
+        buf = packet.packet_data
+        logging.info("Packet {} result: {}".format(packet.idx, hexify(buf)))
+        logging.info("----- ----- ----- ----- ----- ----- ----- -----")
+        self.transmit_handler(1, packet.packet_data)

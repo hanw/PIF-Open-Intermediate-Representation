@@ -43,3 +43,4 @@ class ControlFlow(Processor):
             logging.info("PROCESS: {}.{}".format(self.name, basic_block))
             offset, basic_block =self.basic_blocks[basic_block].process(packet,
                                                                         offset) 
+        self.next_processor.process(packet, bit_offset)

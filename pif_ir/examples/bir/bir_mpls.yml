@@ -121,6 +121,7 @@ a_p4_switch:
 # ----- ----- ----- ----- ----- ----- ----- -----
 table_initialization:
     - mpls_value_set:
+        match_type: exact
         key:
             label:  0xCCCCC
         value:
@@ -128,6 +129,7 @@ table_initialization:
             flags:  0xF
             frag:   0xFFFF
     - mpls_value_set:
+        match_type: exact
         key:
             label:  0xDDDDD
         value:

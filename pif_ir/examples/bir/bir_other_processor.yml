@@ -193,6 +193,13 @@ deparser:
         - [deparse_eth]
 
 # ----- ----- ----- ----- ----- ----- ----- -----
+# Other Processors
+# ----- ----- ----- ----- ----- ----- ----- -----
+traffic_manager:
+    type: other_processor
+    class: TrafficManager
+
+# ----- ----- ----- ----- ----- ----- ----- -----
 # System
 # ----- ----- ----- ----- ----- ----- ----- -----
 a_p4_switch:

@@ -34,6 +34,9 @@ class MetadataInstance(object):
             value = (value << len(fld)) + int(fld)
         return value
 
+    def to_dict(self):
+        return dict([(v.name,int(v)) for v in self.values.values()])
+
     def extract(self, buf, bit_offset=0):
         fld_offset = 0;
         for fld in self.values.values():
@@ -57,4 +60,8 @@ class MetadataInstance(object):
         fld = self.values.get(value_name, None)
         if fld:
             fld.value = value
+
+    def reset_values(self, new_val=0):
+        for fld in self.values.values():
+            fld.value = new_val
 

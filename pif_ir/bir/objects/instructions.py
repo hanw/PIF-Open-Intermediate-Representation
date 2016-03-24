@@ -31,6 +31,7 @@ class Instructions(object):
             resp = packet.metadata[args[0]]
             req = packet.metadata[args[1]]
             if self.table:
+                resp.reset_values()
                 self.table.lookup(req, resp)
 
         elif op == 'hInsert':
@@ -40,9 +41,13 @@ class Instructions(object):
             length = args[0] if len(args) > 0 else len(self.header)
             packet.remove(length, bit_offset)
         elif op == 'tInsert':
-            pass    # FIXME: to be implemented
+            mask = args[2] if len(args) > 2 else None
+            if self.table:
+                self.table.add_entry(args[0], args[1], mask)
         elif op == 'tRemove':
-            pass    # FIXME: to be implemented
+            mask = args[2] if len(args) > 2 else None
+            if self.table:
+                self.table.remove_entry(args[0], args[1], mask)
         else:
             raise BIRError("unknown build-in function: {}".format(op))
 

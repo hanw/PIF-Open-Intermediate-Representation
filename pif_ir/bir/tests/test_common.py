@@ -55,7 +55,7 @@ yaml_resp_meta_dict = {
 # single Table description
 yaml_table_dict = {
     'type' : 'table',
-    'match_type' : 'exact',
+    'match_type' : 'ternary',
     'depth' : 64,
     'request' : 'req_t',
     'response' : 'resp_t',

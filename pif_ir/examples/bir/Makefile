@@ -6,7 +6,7 @@ OFTEST_PYTHON=${OFTEST_PATH}/src/python
 PYPATH=PYTHONPATH=${ROOT_DIR}/:${OFTEST_PYTHON}
 
 sample: submodule
-	sudo ${PYPATH} ./start.py bir_sample.yml
+	sudo ${PYPATH} ./start.py bir_sample.yml --dp_verbose
 
 %.yml: submodule
 	sudo ${PYPATH} ./start.py $@

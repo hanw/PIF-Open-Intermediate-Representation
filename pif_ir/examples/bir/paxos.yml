@@ -245,7 +245,10 @@ bb_sequence_tbl:
 bb_round_tbl:
     type: basic_block
     local_table: round_tbl
-    instructions: []
+    instructions:
+    -   - O
+        - register_read
+        - [ paxos_packet_metadata, rounds_register, paxos.inst ]
     next_control_state:
     -   - 0
     -   - [ meta.round <= meta.rnd, bb_acceptor_tbl ]
@@ -256,11 +259,64 @@ bb_acceptor_tbl:
     instructions: []
     next_control_state:
     -   - 0
+    -   - [ acceptor_tbl_resp.hit == 1 && acceptor_tbl_resp.p4_action == 1, bb_acceptor_tbl_handle_1a]
+        - [ acceptor_tbl_resp.hit == 1 && acceptor_tbl_resp.p4_action == 2, bb_acceptor_tbl_handle_2a]
+        - $done$
+bb_acceptor_tbl_handle_1a:
+    type: basic_block
+    instructions:
+    -   - V
+        - paxos.msgtype
+        - PAXOS_1B
+    -   - O
+        - register_read
+        - [ paxos.vrnd, vrounds_register, paxos.inst ]
+    -   - O
+        - register_read
+        - [ paxos.paxosval, values_register, paxos.inst ]
+    -   - O
+        - register_read
+        - [ paxos.acptid, datapath_id, 0 ]
+    -   - O
+        - register_write
+        - [ rounds_register, paxos.inst, paxos.rnd ]
+    next_control_state:
+    -   - 0
+    -   - $done$
+bb_acceptor_tbl_handle_2a:
+    type: basic_block
+    instructions:
+    -   - V
+        - paxos.msgtype
+        - PAXOS_2B
+    -   - O
+        - register_write
+        - [ rounds_register, paxos.inst, paxos.rnd ]
+    -   - O
+        - register_write
+        - [ vrounds_register, paxos.inst, paxos.rnd ]
+    -   - O
+        - register_write
+        - [ values_register, paxos.inst, paxos.paxosval ]
+    -   - O
+        - register_read
+        - [ paxos.acptid, datapath_id, 0 ]
+    next_control_state:
+    -   - 0
+    -   - $done$
+bb_acceptor_tbl_drop:
+    type: basic_block
+    instructions: []
+    next_control_state:
+    -   - 0
     -   - $done$
 bb_role_tbl:
     type: basic_block
     local_table: role_tbl
-    instructions: []
+    instructions:
+    -   - O
+        - register_read
+        - [ switch_metadata.role, role_register, 0 ]
     next_control_state:
     -   - 0
     -   - [ meta.role == 1, bb_sequence_tbl ]
@@ -344,7 +400,10 @@ parse_udp:
 parse_paxos:
     type: basic_block
     local_header: paxos_t
-    instructions: []
+    instructions:
+    -   - V
+        - meta.valid_paxos
+        - 1
     next_control_state:
     -   - $offset$ + 352
     -   - $done$

@@ -241,6 +241,22 @@ bb_sequence_tbl:
     instructions: []
     next_control_state:
     -   - 0
+    -   - [ sequence_tbl_resp.hit == 1 && sequence_tbl_resp.p4_action == 1, bb_sequence_tbl_increase_instance ]
+        - $done$
+bb_sequence_tbl_increase_instance:
+    type: basic_block
+    instructions:
+    -   - O
+        - register_read
+        - [ paxos.inst, instance_register, 0 ]
+    -   - V
+        - paxos.inst
+        - paxos.inst + 1
+    -   - O
+        - register_write
+        - [ instance_register, 0, paxos.inst ]
+    next_control_state:
+    -   - 0
     -   - $done$
 bb_round_tbl:
     type: basic_block

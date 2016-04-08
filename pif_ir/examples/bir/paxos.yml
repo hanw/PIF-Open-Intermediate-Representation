@@ -353,6 +353,56 @@ bb_dmac_tbl:
     -   - 0
     -   - [ meta.valid_paxos == 1, bb_role_tbl ]
         - $done$
+bb__condition_0:
+    type: basic_block
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   -   - meta.valid_ipv4 == 1
+            - bb_dmac_tbl
+        - $done$
+bb__condition_1:
+    type: basic_block
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   -   - meta.valid_paxos == 1
+            - bb_role_tbl
+        - $done$
+bb__condition_2:
+    type: basic_block
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   -   - meta.switch_metadata$role == 1
+            - bb_sequence_tbl
+        -   - meta.switch_metadata$role != 1
+            - bb_condition_3
+        - $done$
+bb__condition_3:
+    type: basic_block
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   -   - meta.switch_metadata$role == 2
+            - bb_round_tbl
+        - $done$
+bb__condition_4:
+    type: basic_block
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   -   - meta.paxos$rnd <= meta.paxos_packet_metadata$round 
+            - bb_acceptor_tbl
+        - $done$
+bb__condition_5:
+    type: basic_block
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   -   - meta.valid_ipv6 == 1
+            - bb_drop_tbl
+        - $done$
 parse_ethernet:
     type: basic_block
     local_header: ethernet_t
@@ -484,8 +534,7 @@ ingress_control_0:
     type: control_flow
     start_control_state:
     -   - 0
-    -   - [ meta.valid_ipv4 == 1, bb_dmac_tbl ]
-        - [ meta.valid_ipv6 == 1, bb_drop_tbl ]
+    -   - bb__condition_0
         - $done$
 deparser:
     type: control_flow

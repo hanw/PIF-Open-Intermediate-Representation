@@ -241,33 +241,54 @@ bb_sequence_tbl:
     instructions: []
     next_control_state:
     -   - 0
-    -   - [ sequence_tbl_resp.hit == 1 && sequence_tbl_resp.p4_action == 1, bb_sequence_tbl_increase_instance ]
+    -   -   - sequence_tbl_resp.hit == 1 && sequence_tbl_resp.p4_action == 1
+            - bb_increase_instance
+        -   - sequence_tbl_resp.hit == 1 && sequence_tbl_resp.p4_action == 2
+            - bb__nop
         - $done$
-bb_sequence_tbl_increase_instance:
+bb_increase_instance:
     type: basic_block
     instructions:
     -   - O
         - register_read
-        - [ paxos.inst, instance_register, 0 ]
-    -   - V
-        - paxos.inst
-        - paxos.inst + 1
+        -   - paxos.inst
+            - p4_register.instance_register
+            - 0
     -   - O
         - register_write
-        - [ instance_register, 0, paxos.inst ]
+        -   - p4_register.instance_register
+            - 0
+            - paxos.inst
+    next_control_state:
+    -   - 0
+    -   - $done$
+bb__nop:
+    type: basic_block
+    instructions: []
     next_control_state:
     -   - 0
     -   - $done$
 bb_round_tbl:
     type: basic_block
     local_table: round_tbl
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   -   - round_tbl_resp.hit == 1
+            - bb_read_round
+        - $done$
+bb_read_round:
+    type: basic_block
     instructions:
     -   - O
         - register_read
-        - [ paxos_packet_metadata, rounds_register, paxos.inst ]
+        -   - paxos_packet_metadata.round
+            - p4_register.rounds_register
+            - paxos.inst
     next_control_state:
     -   - 0
-    -   - [ meta.round <= meta.rnd, bb_acceptor_tbl ]
+    -   -   - (meta.paxos_packet_metadata_round <= meta.paxos$rnd)
+            - bb_acceptor_tbl
         - $done$
 bb_acceptor_tbl:
     type: basic_block
@@ -275,52 +296,66 @@ bb_acceptor_tbl:
     instructions: []
     next_control_state:
     -   - 0
-    -   - [ acceptor_tbl_resp.hit == 1 && acceptor_tbl_resp.p4_action == 1, bb_acceptor_tbl_handle_1a]
-        - [ acceptor_tbl_resp.hit == 1 && acceptor_tbl_resp.p4_action == 2, bb_acceptor_tbl_handle_2a]
+    -   -   - acceptor_tbl_resp.hit == 1 && acceptor_tbl_resp.p4_action == 1
+            - bb_handle_1a
+        -   - acceptor_tbl_resp.hit == 1 && acceptor_tbl_resp.p4_action == 2
+            - bb_handle_2a
+        -   - acceptor_tbl_resp.hit == 1 && acceptor_tbl_resp.p4_action == 3
+            - bb__drop
         - $done$
-bb_acceptor_tbl_handle_1a:
+bb_handle_1a:
     type: basic_block
     instructions:
-    -   - V
-        - paxos.msgtype
-        - PAXOS_1B
     -   - O
         - register_read
-        - [ paxos.vrnd, vrounds_register, paxos.inst ]
+        -   - paxos.vrnd
+            - p4_register.vrounds_register
+            - paxos.inst
     -   - O
         - register_read
-        - [ paxos.paxosval, values_register, paxos.inst ]
+        -   - paxos.paxosval
+            - p4_register.values_register
+            - paxos.inst
     -   - O
         - register_read
-        - [ paxos.acptid, datapath_id, 0 ]
+        -   - paxos.acptid
+            - p4_register.datapath_id
+            - 0
     -   - O
         - register_write
-        - [ rounds_register, paxos.inst, paxos.rnd ]
+        -   - p4_register.rounds_register
+            - paxos.inst
+            - paxos.rnd
     next_control_state:
     -   - 0
     -   - $done$
-bb_acceptor_tbl_handle_2a:
+bb_handle_2a:
     type: basic_block
     instructions:
-    -   - V
-        - paxos.msgtype
-        - PAXOS_2B
     -   - O
         - register_write
-        - [ rounds_register, paxos.inst, paxos.rnd ]
+        -   - p4_register.rounds_register
+            - paxos.inst
+            - paxos.rnd
     -   - O
         - register_write
-        - [ vrounds_register, paxos.inst, paxos.rnd ]
+        -   - p4_register.vrounds_register
+            - paxos.inst
+            - paxos.rnd
     -   - O
         - register_write
-        - [ values_register, paxos.inst, paxos.paxosval ]
+        -   - p4_register.values_register
+            - paxos.inst
+            - paxos.paxosval
     -   - O
         - register_read
-        - [ paxos.acptid, datapath_id, 0 ]
+        -   - paxos.acptid
+            - p4_register.datapath_id
+            - 0
     next_control_state:
     -   - 0
     -   - $done$
-bb_acceptor_tbl_drop:
+bb__drop:
     type: basic_block
     instructions: []
     next_control_state:
@@ -329,14 +364,39 @@ bb_acceptor_tbl_drop:
 bb_role_tbl:
     type: basic_block
     local_table: role_tbl
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   -   - role_tbl_resp.hit == 1
+            - bb_read_role
+        - $done$
+bb_read_role:
+    type: basic_block
     instructions:
     -   - O
         - register_read
-        - [ switch_metadata.role, role_register, 0 ]
+        -   - switch_metadata.role
+            - p4_register.role_register
+            - 0
     next_control_state:
     -   - 0
-    -   - [ meta.role == 1, bb_sequence_tbl ]
-        - [ meta.role == 2, bb_round_tbl ]
+    -   - [ meta.switch_metadata_role == 1, bb_sequence_tbl ]
+        - [ meta.switch_metadata_role == 2, bb_round_tbl ]
+        - $done$
+bb_dmac_tbl:
+    type: basic_block
+    local_table: dmac_tbl
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   - [ dmac_tbl_resp.hit == 0, bb_forward ]
+        - $done$
+bb_forward:
+    type: basic_block
+    instructions: []
+    next_control_state:
+    -   - 0
+    -   - [ meta.valid_paxos == 1, bb_role_tbl ]
         - $done$
 bb_drop_tbl:
     type: basic_block
@@ -345,64 +405,6 @@ bb_drop_tbl:
     next_control_state:
     -   - 0
     -   - $done$
-bb_dmac_tbl:
-    type: basic_block
-    local_table: dmac_tbl
-    instructions: []
-    next_control_state:
-    -   - 0
-    -   - [ meta.valid_paxos == 1, bb_role_tbl ]
-        - $done$
-bb__condition_0:
-    type: basic_block
-    instructions: []
-    next_control_state:
-    -   - 0
-    -   -   - meta.valid_ipv4 == 1
-            - bb_dmac_tbl
-        - $done$
-bb__condition_1:
-    type: basic_block
-    instructions: []
-    next_control_state:
-    -   - 0
-    -   -   - meta.valid_paxos == 1
-            - bb_role_tbl
-        - $done$
-bb__condition_2:
-    type: basic_block
-    instructions: []
-    next_control_state:
-    -   - 0
-    -   -   - meta.switch_metadata$role == 1
-            - bb_sequence_tbl
-        -   - meta.switch_metadata$role != 1
-            - bb_condition_3
-        - $done$
-bb__condition_3:
-    type: basic_block
-    instructions: []
-    next_control_state:
-    -   - 0
-    -   -   - meta.switch_metadata$role == 2
-            - bb_round_tbl
-        - $done$
-bb__condition_4:
-    type: basic_block
-    instructions: []
-    next_control_state:
-    -   - 0
-    -   -   - meta.paxos$rnd <= meta.paxos_packet_metadata$round 
-            - bb_acceptor_tbl
-        - $done$
-bb__condition_5:
-    type: basic_block
-    instructions: []
-    next_control_state:
-    -   - 0
-    -   -   - meta.valid_ipv6 == 1
-            - bb_drop_tbl
-        - $done$
 parse_ethernet:
     type: basic_block
     local_header: ethernet_t
@@ -534,7 +536,10 @@ ingress_control_0:
     type: control_flow
     start_control_state:
     -   - 0
-    -   - bb__condition_0
+    -   -   - (meta.valid_ipv4 == 1)
+            - bb_dmac_tbl
+        -   - (meta.valid_ipv6 == 1)
+            - bb_drop_tbl
         - $done$
 deparser:
     type: control_flow
